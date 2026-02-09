@@ -1,5 +1,4 @@
 // Frankie Pothier
-// V00991730
 
 var canvas;
 var gl;
