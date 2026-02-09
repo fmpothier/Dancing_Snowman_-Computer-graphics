@@ -1,7 +1,7 @@
 ## Demo Video
 
 <!-- Clickable thumbnail -->
-<a href="Demo Video/Frankie_Pothier_Movie.mp4">
+<a href="Demo Video/Shortened_demo_video.mp4">
   <img src="Demo Video/Frankie_Pothier_image.jpg" alt="Click to watch demo video" width="600">
 </a>
 
