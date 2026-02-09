@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
+
+in vec4 vPosition;
+in vec3 vNormal;
+in vec2 vTexCoord;
+
+out vec3 fNormal;
+out vec3 fPosition;
+out vec2 fTexCoord;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 normalMatrix;
+uniform mat4 projectionMatrix;
+
+void
+main()
+{
+    // Transform vertex normal into eye coordinates
+    fPosition = (modelViewMatrix * vPosition).xyz;
+    fNormal = normalize( (normalMatrix*vec4(vNormal,0.0)).xyz);
+    
+    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+    
+	fTexCoord = vTexCoord;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
+
+precision mediump float;
+
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+uniform int useTextures;
+
+uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform vec4 lightPosition;
+uniform float shininess;
+
+// for glow effect
+uniform vec4 glowColor;
+
+in vec3 fNormal;
+in vec3 fPosition;
+in vec2 fTexCoord;
+
+layout(location=0) out vec4 fragColor ;
+
+void
+main()
+{
+	vec3 normal = normalize(fNormal);
+    vec3 lightDir = normalize(lightPosition.xyz - fPosition);
+    vec3 viewDir = normalize(-fPosition);
+
+    // Compute lighting vectore haldway between for Blinn-Phong
+    vec3 halfDir = normalize(lightDir + viewDir);
+
+    // Calculate diffuse lighting
+    float lightDotNormal = max(dot(lightDir, normal), 0.0);
+    vec4 diffuse = diffuseProduct * lightDotNormal;
+
+    // Calculate specular lighting using the Blinn-Phong model
+    float specFactor = pow(max(dot(normal, halfDir), 0.0), shininess);
+    vec4 specular = specularProduct * specFactor;
+
+    // Final color with ambient, diffuse, and specular
+    vec4 lighting = ambientProduct + diffuse + specular;
+
+    vec4 baseColor;
+    if (useTextures == 0) {
+        // When using textures: sample the texture and blend it with the lighting
+        vec4 texColor = texture(texture1, fTexCoord);
+        baseColor = mix(texColor, texColor * lighting, 0.15);
+    } else {
+        // Otherwise, the base color is just the computed lighting
+        baseColor = lighting;
+    }
+
+    // Add the glow effect by adding the glowColor to the base color.
+    // Added glow color to the base colour to make an object look brighter (likes its glowing)
+    fragColor = baseColor + glowColor;
+
+}
+</script>
+
+<script type="text/javascript" src="Common/webgl-utils.js"></script>
+<script type="text/javascript" src="Common/initShaders.js"></script>
+
+<script type="text/javascript" src="Common/MV.js"></script>
+<script type="text/javascript" src="objects.js"></script>
+<script type="text/javascript" src="main.js"></script>
+
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<br/>
+<br/>
+
+<div id="textureToggleButton">
+    <input id="textureToggleButtoni" type="button" value="Toggle Textures"/>
+</div>
+</body>
+</html>
